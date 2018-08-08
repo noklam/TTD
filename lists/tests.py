@@ -13,29 +13,17 @@ class HomePageTest(TestCase):
         response = self.client.get('/')
         self.assertTemplateUsed(response, 'home.html')
 
-    def test_home_page_show_items_in_database(self):
-
-        Item.objects.create(text='item1')
-        Item.objects.create(text='item2')
-
-        request = HttpRequest()
-        responese = home_page(request)
-
-        self.assertIn('item1', responese.content.decode())
-        self.assertIn('item2', responese.content.decode())
-
+class NewListView(TestCase):
     def test_home_page_can_save_post_requests_to_database(self):
-        request = HttpRequest()    
-        request.method = 'POST'
-        request.POST['item_text'] = 'A new item'
 
-        response = home_page(request)
-
+        response = self.client.post('/lists/new', {'item_text': 'A new item'})
         item_from_db = Item.objects.all()[0]
         self.assertEqual(item_from_db.text, 'A new item')
-        print(response.content)
-        self.assertEqual(response.status_code, 302)
-        self.assertEqual(response['Location'], '/lists/the-only-list-in-the-world')
+
+    def test_redirectes_to_list_url(self):  
+        response = self.client.post('/lists/new', {'item_text': 'A new item'})
+        self.assertRedirects(response, 
+        '/lists/the-only-list-in-the-world/')
 
         # print('*'*30)
         # print(response.content.decode())
