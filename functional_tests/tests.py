@@ -2,9 +2,10 @@ from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 import time
 from django.test import LiveServerTestCase
+import unittest
 
 class NewVisitorTest(LiveServerTestCase):
-
+    
     def setUp(self):
         self.browser = webdriver.Firefox()
         self.browser.implicitly_wait(3)
@@ -56,17 +57,47 @@ class NewVisitorTest(LiveServerTestCase):
         inputbox.send_keys(Keys.ENTER)
         time.sleep(1)
 
+        # The page updates again, and now shows both items on her list
         self.check_for_row_in_list_table("2: Use peacock feathers to make a fly")
 
+        
+        # Now a new user, Francis comes along to the site.
+
+        ## We use a new browser session to make sure that no information of Edith's is coming through cookies
+        self.browser.quit()
+        self.browser = webdriver.Firefox()
+
+        # Francis visits the home page. There is no sign of Edith's list
+        self.browser.get(self.live_server_url)
+        page_text = self.browser.find_element_by_tag_name('body').text
+        self.assertNotIn('Buy peacock feathers', page_text)
+        self.assertNotIn('make a fly', page_text)
+
+
+         # He is invited to enter a to-do item straight away
+        inputbox = self.browser.find_element_by_id('id_new_item')
+
+
+        # he types "Buy milk" into a text box 
+        inputbox.send_keys('Buy milk')
+
+        # Francis gets his own unique URL
+        francis_list_url = self.browser.current_url
+        self.assertRegex(francis_list_url, '/lists/.+')
+        self.assertNotEqual(francis_list_url, edith_list_url)
+
+        # Again, there is no trace of Edith's list
+        page_text = self.browser.find_element_by_tag_name('body').text
+        self.assertNotIn('Buy peacock feathers', page_text)
+        self.assertIn('Buy milk', page_text)
+
+        # Satisfied, they go back to sleep
         self.fail('Finish the test!')
+    
 
-        # The page updates again, and now shows both items on her list
+        # Edith wonders whether the site will remember her list. Then she
+        # see that the site has generated a unique URL for her.
+        # there is some explanatory text to that effect.
 
-        # Edith wonders whether the site will remember her list. Then she sees
-        # that the site has generated a unique URL for her -- there is some
-        # explanatory text to that effect.
-
-        # She visits that URL - her to-do list is still there.
-
-        # Satisfied, she goes back to sleep
-
+if __name__ =='__main__':
+    unittest.main(warnings='ignore')

@@ -35,7 +35,7 @@ class HomePageTest(TestCase):
         self.assertEqual(item_from_db.text, 'A new item')
         print(response.content)
         self.assertEqual(response.status_code, 302)
-        self.assertEqual(response['Location'], '/')
+        self.assertEqual(response['Location'], '/lists/the-only-list-in-the-world')
 
         # print('*'*30)
         # print(response.content.decode())
@@ -57,4 +57,16 @@ class ItemModelTest(TestCase):
         self.assertEqual(first_item_from_db.text, 'Item the first')
 
         second_item_from_db = Item.objects.all()[1]
-        self.assertEqual(second_item_from_db.text, 'Item the second')        
+        self.assertEqual(second_item_from_db.text, 'Item the second')  
+
+class ListViewTest(TestCase):
+
+    def test_lists_page_shows_items_in_database(self):
+
+        Item.objects.create(text='item1')
+        Item.objects.create(text='item2')
+
+        response = self.client.get('/lists/the-only-list-in-the-world/')
+
+        self.assertIn('item1', response.content.decode())
+        self.assertContains(response,'item2')
