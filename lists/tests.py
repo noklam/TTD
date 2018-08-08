@@ -58,3 +58,7 @@ class ListViewTest(TestCase):
 
         self.assertIn('item1', response.content.decode())
         self.assertContains(response,'item2')
+
+    def test_uses_lists_template(self):
+        response = self.client.get('/lists/the-only-list-in-the-world/')
+        self.assertTemplateUsed(response,  'list.html')

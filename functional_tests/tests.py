@@ -60,7 +60,6 @@ class NewVisitorTest(LiveServerTestCase):
         # The page updates again, and now shows both items on her list
         self.check_for_row_in_list_table("2: Use peacock feathers to make a fly")
 
-        
         # Now a new user, Francis comes along to the site.
 
         ## We use a new browser session to make sure that no information of Edith's is coming through cookies
@@ -80,9 +79,11 @@ class NewVisitorTest(LiveServerTestCase):
 
         # he types "Buy milk" into a text box 
         inputbox.send_keys('Buy milk')
+        inputbox.send_keys(Keys.ENTER)
 
         # Francis gets his own unique URL
         francis_list_url = self.browser.current_url
+        print(francis_list_url)
         self.assertRegex(francis_list_url, '/lists/.+')
         self.assertNotEqual(francis_list_url, edith_list_url)
 
