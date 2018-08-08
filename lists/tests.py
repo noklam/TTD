@@ -1,8 +1,11 @@
-from django.test import TestCase
 from django.http import HttpRequest
-from django.template.loader import render_to_string
-from lists.views import home_page
 from django.shortcuts import render
+from django.template.loader import render_to_string
+from django.test import TestCase
+
+from lists.models import Item
+from lists.views import home_page
+
 
 class HomePageTest(TestCase):
 
@@ -10,14 +13,48 @@ class HomePageTest(TestCase):
         response = self.client.get('/')
         self.assertTemplateUsed(response, 'home.html')
 
-    def test_home_page_can_remember_POST_requests(self):
+    def test_home_page_show_items_in_database(self):
+
+        Item.objects.create(text='item1')
+        Item.objects.create(text='item2')
+
+        request = HttpRequest()
+        responese = home_page(request)
+
+        self.assertIn('item1', responese.content.decode())
+        self.assertIn('item2', responese.content.decode())
+
+    def test_home_page_can_save_post_requests_to_database(self):
         request = HttpRequest()    
         request.method = 'POST'
         request.POST['item_text'] = 'A new item'
+
         response = home_page(request)
 
-        self.assertIn('A new item', response.content.decode())
-        expected_content = render_to_string('home.html',{'new_item_text':'A new item'})
+        item_from_db = Item.objects.all()[0]
+        self.assertEqual(item_from_db.text, 'A new item')
+        print(response.content)
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response['Location'], '/')
+
         # print('*'*30)
         # print(response.content.decode())
         # print(render(HttpRequest(), 'home.html').content.decode())
+
+class ItemModelTest(TestCase):
+
+    def test_saving_and_retrieving_items_to_the_database(self):
+
+        first_item = Item()
+        first_item.text = 'Item the first'
+        first_item.save()
+
+        second_item = Item()
+        second_item.text = 'Item the second'
+        second_item.save()
+
+        first_item_from_db = Item.objects.all()[0]
+        self.assertEqual(first_item_from_db.text, 'Item the first')
+
+        second_item_from_db = Item.objects.all()[1]
+        self.assertEqual(second_item_from_db.text, 'Item the second')        
